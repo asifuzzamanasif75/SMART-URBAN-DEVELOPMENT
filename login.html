@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart City</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 420px;
+            width: 100%;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .auth-header i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-header p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .auth-forms {
+            padding: 2.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .message {
+            padding: 0.875rem;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+            display: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .message.show {
+            display: block;
+            animation: shake 0.5s;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #059669;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .register-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                max-width: 100%;
+            }
+
+            .auth-header {
+                padding: 1.5rem;
+            }
+
+            .auth-forms {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <i class="fas fa-city"></i>
+            <h2>Smart City Login</h2>
+            <p>Access Your Dashboard</p>
+        </div>
+
+        <div class="auth-forms">
+            <div class="message" id="loginMessage"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="loginUsername" placeholder="Enter username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Enter password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+
+            <div class="register-link">
+                Don't have an account? <a href="register.html">Register here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pre-registered users
+        const registeredUsers = [
+            { username: 'admin', password: '12345', role: 'admin', email: 'admin@smartcity.gov' },
+            { username: 'user', password: '12345', role: 'user', email: 'user@smartcity.gov' }
+        ];
+
+        // Initialize users in storage if not exists
+        function initializeUsers() {
+            const existingUsers = localStorage.getItem('smartCityUsers');
+            if (!existingUsers) {
+                localStorage.setItem('smartCityUsers', JSON.stringify(registeredUsers));
+                console.log('✅ Initialized default users');
+            } else {
+                // Merge with existing users if admin/user not present
+                const users = JSON.parse(existingUsers);
+                const hasAdmin = users.some(u => u.username === 'admin');
+                const hasUser = users.some(u => u.username === 'user');
+                
+                if (!hasAdmin) users.push(registeredUsers[0]);
+                if (!hasUser) users.push(registeredUsers[1]);
+                
+                localStorage.setItem('smartCityUsers', JSON.stringify(users));
+                console.log('✅ Users loaded:', users.length, 'total users');
+            }
+        }
+
+        function showMessage(message, type) {
+            const messageEl = document.getElementById('loginMessage');
+            messageEl.textContent = message;
+            messageEl.className = `message ${type} show`;
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 3000);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                showMessage('Please fill in all fields!', 'error');
+                return;
+            }
+
+            // Get users from localStorage
+            const users = JSON.parse(localStorage.getItem('smartCityUsers') || '[]');
+            console.log('🔍 Attempting login for:', username);
+            console.log('📋 Available users:', users.map(u => u.username));
+
+            // Find matching user (case-insensitive username comparison)
+            const user = users.find(u => 
+                u.username.toLowerCase() === username.toLowerCase() && 
+                u.password === password
+            );
+
+            if (user) {
+                // Save logged in user
+                localStorage.setItem('loggedInUser', JSON.stringify({
+                    username: user.username,
+                    role: user.role,
+                    email: user.email
+                }));
+
+                showMessage('✅ Login successful! Redirecting...', 'success');
+                console.log('✅ Login successful as:', user.username, '(' + user.role + ')');
+
+                // Redirect to the main dashboard
+                setTimeout(() => {
+                    window.location.href = 'admin-dashboard.html';
+                }, 1000);
+            } else {
+                showMessage('❌ Invalid username or password!', 'error');
+                console.log('❌ Login failed for:', username);
+                console.log('💡 Hint: Try username "admin" or "user" with password "12345"');
+            }
+        }
+
+        // Check if already logged in
+        function checkLoginStatus() {
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+            if (loggedInUser) {
+                console.log('👤 Already logged in:', loggedInUser.username);
+                console.log('🔄 Redirecting to dashboard...');
+                // Always redirect to main dashboard
+                window.location.href = 'admin-dashboard.html';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏙️ Smart City Login System Initialized');
+            initializeUsers();
+            checkLoginStatus();
+            
+            // Auto-focus on username field
+            document.getElementById('loginUsername').focus();
+        });
+
+        // Allow Enter key to submit
+        document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin(e);
+            }
+        });
+    </script>
+</body>
+</html>
