@@ -21,10 +21,15 @@ async function loadAllData() {
         const result = await response.json();
         
         if (result.success) {
-            // Update global data object
-            Object.assign(data, result.data);
-            console.log('✅ Data loaded from database:', result.data);
-            return result.data;
+            // Convert string IDs to numbers for all tables
+            Object.keys(result.data).forEach(table => {
+                data[table] = result.data[table].map(item => ({
+                    ...item,
+                    id: parseInt(item.id)
+                }));
+            });
+            console.log('✅ Data loaded from database:', data);
+            return data;
         } else {
             console.error('❌ Failed to load data:', result.message);
             return null;
@@ -42,8 +47,13 @@ async function getTableData(table) {
         const result = await response.json();
         
         if (result.success) {
-            data[table] = result.data;
-            return result.data;
+            // Convert string IDs to numbers for consistency
+            data[table] = result.data.map(item => ({
+                ...item,
+                id: parseInt(item.id)
+            }));
+            console.log(`✅ Loaded ${data[table].length} records from ${table}`);
+            return data[table];
         } else {
             console.error('❌ Failed to load table data:', result.message);
             return null;

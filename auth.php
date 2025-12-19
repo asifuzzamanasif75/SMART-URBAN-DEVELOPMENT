@@ -143,11 +143,11 @@ function handleRegister($db) {
         return;
     }
     
-    // Hash password
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    // Hash password using bcrypt (same as database demo users)
+    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
     
     // Insert new user (always as regular user)
-    $insertQuery = "INSERT INTO users (username, email, password, role) VALUES (:username, :email, :password, 'user')";
+    $insertQuery = "INSERT INTO users (username, email, password, role, created_at) VALUES (:username, :email, :password, 'user', NOW())";
     
     try {
         $stmt = $db->prepare($insertQuery);
