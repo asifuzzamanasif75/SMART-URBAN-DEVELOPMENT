@@ -130,6 +130,11 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
 
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .message {
             padding: 0.875rem;
             border-radius: 10px;
@@ -183,18 +188,20 @@
             text-decoration: underline;
         }
 
-        @media (max-width: 480px) {
-            .auth-container {
-                max-width: 100%;
-            }
+        .loader {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
 
-            .auth-header {
-                padding: 1.5rem;
-            }
-
-            .auth-forms {
-                padding: 2rem 1.5rem;
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -226,7 +233,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn-primary" id="loginBtn">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
             </form>
@@ -237,32 +244,14 @@
         </div>
     </div>
 
-    <script>
-        // Pre-registered users
-        const registeredUsers = [
-            { username: 'admin', password: '12345', role: 'admin', email: 'admin@smartcity.gov' },
-            { username: 'user', password: '12345', role: 'user', email: 'user@smartcity.gov' }
-        ];
+        </div>
 
-        // Initialize users in storage if not exists
-        function initializeUsers() {
-            const existingUsers = localStorage.getItem('smartCityUsers');
-            if (!existingUsers) {
-                localStorage.setItem('smartCityUsers', JSON.stringify(registeredUsers));
-                console.log('✅ Initialized default users');
-            } else {
-                // Merge with existing users if admin/user not present
-                const users = JSON.parse(existingUsers);
-                const hasAdmin = users.some(u => u.username === 'admin');
-                const hasUser = users.some(u => u.username === 'user');
-                
-                if (!hasAdmin) users.push(registeredUsers[0]);
-                if (!hasUser) users.push(registeredUsers[1]);
-                
-                localStorage.setItem('smartCityUsers', JSON.stringify(users));
-                console.log('✅ Users loaded:', users.length, 'total users');
-            }
-        }
+    <script>
+        // Demo credentials (for testing only)
+        const DEMO_USERS = {
+            'admin': { password: 'admin123', role: 'admin', name: 'Administrator' },
+            'user': { password: 'user123', role: 'user', name: 'Regular User' }
+        };
 
         function showMessage(message, type) {
             const messageEl = document.getElementById('loginMessage');
@@ -273,76 +262,60 @@
             }, 3000);
         }
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault();
             
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
+            const loginBtn = document.getElementById('loginBtn');
 
             if (!username || !password) {
                 showMessage('Please fill in all fields!', 'error');
                 return;
             }
 
-            // Get users from localStorage
-            const users = JSON.parse(localStorage.getItem('smartCityUsers') || '[]');
-            console.log('🔍 Attempting login for:', username);
-            console.log('📋 Available users:', users.map(u => u.username));
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Logging in... <span class="loader"></span>';
 
-            // Find matching user (case-insensitive username comparison)
-            const user = users.find(u => 
-                u.username.toLowerCase() === username.toLowerCase() && 
-                u.password === password
-            );
+            // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
-            if (user) {
-                // Save logged in user
-                localStorage.setItem('loggedInUser', JSON.stringify({
-                    username: user.username,
+            // Check credentials locally
+            const user = DEMO_USERS[username];
+            
+            if (user && user.password === password) {
+                const userData = {
+                    username: username,
                     role: user.role,
-                    email: user.email
-                }));
+                    name: user.name,
+                    loginTime: new Date().toISOString()
+                };
 
+                localStorage.setItem('loggedInUser', JSON.stringify(userData));
                 showMessage('✅ Login successful! Redirecting...', 'success');
-                console.log('✅ Login successful as:', user.username, '(' + user.role + ')');
-
-                // Redirect to the main dashboard
+                
                 setTimeout(() => {
-                    window.location.href = 'admin-dashboard.html';
+                    window.location.href = 'index.html';
                 }, 1000);
             } else {
                 showMessage('❌ Invalid username or password!', 'error');
-                console.log('❌ Login failed for:', username);
-                console.log('💡 Hint: Try username "admin" or "user" with password "12345"');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
             }
         }
 
-        // Check if already logged in
         function checkLoginStatus() {
             const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
             if (loggedInUser) {
-                console.log('👤 Already logged in:', loggedInUser.username);
-                console.log('🔄 Redirecting to dashboard...');
-                // Always redirect to main dashboard
-                window.location.href = 'admin-dashboard.html';
+                window.location.href = 'index.html';
             }
         }
 
-        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🏙️ Smart City Login System Initialized');
-            initializeUsers();
+            console.log('🏙️ Smart City Login System Initialized (Local Mode)');
             checkLoginStatus();
-            
-            // Auto-focus on username field
             document.getElementById('loginUsername').focus();
-        });
-
-        // Allow Enter key to submit
-        document.getElementById('loginPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                handleLogin(e);
-            }
         });
     </script>
 </body>

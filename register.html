@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Smart City</title>
+    <title>Register - Smart Urban Development</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -130,6 +130,11 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
 
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .message {
             padding: 0.875rem;
             border-radius: 10px;
@@ -194,18 +199,20 @@
             text-align: center;
         }
 
-        @media (max-width: 480px) {
-            .auth-container {
-                max-width: 100%;
-            }
+        .loader {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
 
-            .auth-header {
-                padding: 1.5rem;
-            }
-
-            .auth-forms {
-                padding: 2rem 1.5rem;
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -257,7 +264,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn-primary" id="registerBtn">
                     <i class="fas fa-user-plus"></i> Register
                 </button>
             </form>
@@ -269,6 +276,8 @@
     </div>
 
     <script>
+        const API_URL = 'http://localhost/SMART-URBAN-DEVELOPMENT/auth.php';
+
         function showMessage(message, type) {
             const messageEl = document.getElementById('registerMessage');
             messageEl.textContent = message;
@@ -278,13 +287,14 @@
             }, 4000);
         }
 
-        function handleRegister(event) {
+        async function handleRegister(event) {
             event.preventDefault();
             
             const username = document.getElementById('registerUsername').value.trim();
             const email = document.getElementById('registerEmail').value.trim();
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const registerBtn = document.getElementById('registerBtn');
 
             // Validation
             if (!username || !email || !password || !confirmPassword) {
@@ -307,60 +317,59 @@
                 return;
             }
 
-            // Check if username or email already exists
-            const users = JSON.parse(localStorage.getItem('smartCityUsers') || '[]');
-            
-            const usernameExists = users.some(u => u.username.toLowerCase() === username.toLowerCase());
-            if (usernameExists) {
-                showMessage('Username already exists! Please choose a different one.', 'error');
-                return;
+            // Disable button and show loading
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Registering... <span class="loader"></span>';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'register');
+                formData.append('username', username);
+                formData.append('email', email);
+                formData.append('password', password);
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('✅ ' + result.message + ' Redirecting to login...', 'success');
+                    
+                    // Clear form
+                    document.getElementById('registerForm').reset();
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    showMessage('❌ ' + result.message, 'error');
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage('❌ Connection error. Please check if XAMPP is running.', 'error');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
             }
-
-            const emailExists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
-            if (emailExists) {
-                showMessage('Email already registered! Please use a different email.', 'error');
-                return;
-            }
-
-            // Register new user (always as 'user' role, not admin)
-            const newUser = {
-                username: username,
-                email: email,
-                password: password,
-                role: 'user' // Always register as regular user
-            };
-
-            users.push(newUser);
-            localStorage.setItem('smartCityUsers', JSON.stringify(users));
-
-            console.log('New user registered:', newUser);
-            console.log('All users now:', users);
-
-            showMessage('Registration successful! Redirecting to login...', 'success');
-
-            // Clear form
-            document.getElementById('registerForm').reset();
-
-            // Redirect to login after 2 seconds
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
         }
 
         // Check if already logged in
         function checkLoginStatus() {
             const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
             if (loggedInUser) {
-                if (loggedInUser.role === 'admin') {
-                    window.location.href = 'admin-dashboard.html';
-                } else {
-                    window.location.href = 'user-dashboard.html';
-                }
+                window.location.href = 'admin-dashboard.html';
             }
         }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏙️ Smart Urban Development Registration');
+            console.log('📡 API URL:', API_URL);
             checkLoginStatus();
         });
     </script>

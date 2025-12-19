@@ -919,14 +919,18 @@
             </div>
         </div>
     </nav>
-
-    <!-- Main Content -->
+    <script src="api-handler.js"></script>
+    <script src="script.js"></script>    <!-- Main Content -->
     <main class="main-content">
         <!-- Home Page -->
         <div id="homePage" class="page-content active">
             <div class="home-actions">
                 <h1>Smart Urban Development Dashboard</h1>
                 <div class="action-buttons-home">
+                    <button class="action-btn" id="refreshBtnHome">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh Data</span>
+                    </button>
                     <button class="action-btn" id="addBtnHome">
                         <i class="fas fa-plus"></i>
                         <span>Add New Entry</span>
@@ -1105,6 +1109,10 @@
             <div class="page-actions">
                 <h2 id="pageTitle"></h2>
                 <div class="action-buttons-top">
+                    <button class="action-btn" id="refreshBtnTop">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh Data</span>
+                    </button>
                     <button class="action-btn" id="addBtnTop">
                         <i class="fas fa-plus"></i>
                         <span>Add New</span>
@@ -1872,7 +1880,7 @@ function renderTableBody(pageData, columns) {
         tbody.appendChild(row);
     });
 }
-
+ 
 function filterTable(searchTerm) {
     const pageData = data[currentPage];
     if (!pageData) return;
@@ -1932,21 +1940,19 @@ function confirmEdit() {
     }
 }
 
-function confirmDelete() {
+async function confirmDelete() {
     if (selectedItem) {
-        const pageData = data[currentPage];
-        const index = pageData.findIndex(item => item.id === selectedItem);
-        if (index > -1) {
-            pageData.splice(index, 1);
-            alert('Item ' + selectedItem + ' deleted successfully');
-        }
-        closeModal('deleteModal');
-        if (currentPage !== 'home') {
-            loadTableData(currentPage);
+        const result = await deleteRecord(currentPage, selectedItem);
+        
+        if (result.success) {
+            alert('✅ ' + result.message);
+            await loadAllData(); // Reload from database
+            closeModal('deleteModal');
+        } else {
+            alert('❌ ' + result.message);
         }
     }
 }
-
 // Mobile Menu Toggle
 function toggleMobileMenu() {
     const navMenu = document.getElementById('navMenu');
@@ -2214,7 +2220,11 @@ const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!loggedInUser) {
     // Not logged in, redirect to login
-    window.location.href = "login.html";
+    // window.location.href = "login.html";
+    console.log('Login check bypassed for testing');
+    // Create mock user for testing
+    const mockUser = { username: 'testuser', role: 'user' };
+    localStorage.setItem("loggedInUser", JSON.stringify(mockUser));
 } else {
     // Display username
     const usernameDisplay = document.getElementById("usernameDisplay");
