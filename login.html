@@ -111,6 +111,25 @@
             background: white;
         }
 
+        .forgot-password-link {
+            text-align: right;
+            margin-top: -0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .forgot-password-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .forgot-password-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
         .btn-primary {
             width: 100%;
             padding: 1rem;
@@ -133,6 +152,7 @@
         .btn-primary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
         }
 
         .message {
@@ -233,6 +253,10 @@
                     </div>
                 </div>
 
+                <div class="forgot-password-link">
+                    <a href="forgot-password.html"><i class="fas fa-key"></i> Forgot Password?</a>
+                </div>
+
                 <button type="submit" class="btn-primary" id="loginBtn">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
@@ -244,10 +268,10 @@
         </div>
     </div>
 
-        </div>
-
     <script>
-        // Demo credentials (for testing only)
+        const API_URL = 'http://localhost/SMART-URBAN-DEVELOPMENT/api.php';
+
+        // Demo credentials for previous users (local mode)
         const DEMO_USERS = {
             'admin': { password: 'admin123', role: 'admin', name: 'Administrator' },
             'user': { password: 'user123', role: 'user', name: 'Regular User' }
@@ -259,7 +283,7 @@
             messageEl.className = `message ${type} show`;
             setTimeout(() => {
                 messageEl.classList.remove('show');
-            }, 3000);
+            }, 5000);
         }
 
         async function handleLogin(event) {
@@ -279,16 +303,14 @@
             loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Logging in... <span class="loader"></span>';
 
             // Simulate network delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Check credentials locally
-            const user = DEMO_USERS[username];
-            
-            if (user && user.password === password) {
+            // First check demo users (for previous local users)
+            if (DEMO_USERS[username] && DEMO_USERS[username].password === password) {
                 const userData = {
                     username: username,
-                    role: user.role,
-                    name: user.name,
+                    role: DEMO_USERS[username].role,
+                    name: DEMO_USERS[username].name,
                     loginTime: new Date().toISOString()
                 };
 
@@ -296,10 +318,52 @@
                 showMessage('✅ Login successful! Redirecting...', 'success');
                 
                 setTimeout(() => {
+                    // Always redirect to user dashboard
+                    // Admins will have admin button visible in the dashboard
                     window.location.href = 'index.html';
                 }, 1000);
-            } else {
-                showMessage('❌ Invalid username or password!', 'error');
+                return;
+            }
+
+            // If not a demo user, try backend authentication
+            try {
+                const formData = new FormData();
+                formData.append('action', 'login');
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const userData = {
+                        username: result.user.username,
+                        role: result.user.role,
+                        email: result.user.email,
+                        id: result.user.id,
+                        loginTime: new Date().toISOString()
+                    };
+
+                    localStorage.setItem('loggedInUser', JSON.stringify(userData));
+                    showMessage('✅ Login successful! Redirecting...', 'success');
+                    
+                    setTimeout(() => {
+                        // Always redirect to user dashboard
+                        // Admins will have admin button visible in the dashboard
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    showMessage('❌ ' + result.message, 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('❌ Invalid username or password', 'error');
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
             }
@@ -308,12 +372,15 @@
         function checkLoginStatus() {
             const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
             if (loggedInUser) {
+                // Always redirect to user dashboard (index.html)
+                // Admins will have access to admin panel from there
                 window.location.href = 'index.html';
             }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🏙️ Smart City Login System Initialized (Local Mode)');
+            console.log('🏙️ Smart City Login System Initialized');
+            console.log('📡 API URL:', API_URL);
             checkLoginStatus();
             document.getElementById('loginUsername').focus();
         });
